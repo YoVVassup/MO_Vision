@@ -52,7 +52,7 @@ auto-py-to-exe
 Моя конфигурация сборки:
 
 ```sh
-pyinstaller --noconfirm --onefile --console --icon "C:/'Указать путь до иконки'/vision.ico" --name "MO Vision" --version-file "C:/'Указать путь до файла-конфигуратора'/versionfile.txt" "C:/'Указать путь до скрипта'/main.py"
+pyinstaller --noconfirm --onefile --windowed "C:/'Указать путь до иконки'/vision.ico" --name "MO Vision" --version-file "C:/'Указать путь до файла-конфигуратора'/versionfile.txt" "C:/'Указать путь до скрипта'/main.py"
 ```
 Нажмите `[Конвертировать .py в .exe]`. Готово.
 

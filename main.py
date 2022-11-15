@@ -325,7 +325,9 @@ if "__main__" == __name__:
         cnt = cnt + 1
 
     time.sleep(1)
-    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+    win32gui.BringWindowToTop(hwnd)
+    win32gui.SetForegroundWindow(hwnd)
+    win32gui.ShowWindow(hwnd, win32con.SW_SHOWMAXIMIZED)
 
     # Ожидание конца.
     try:

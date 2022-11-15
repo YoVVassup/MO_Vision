@@ -48,6 +48,7 @@ MentalOmegaMaps_path = f'{cwd}\\INI\\MentalOmegaMaps.ini'
 artmo_path = f'{cwd}\\artmo.ini'
 fan_art_path = f'{cwd}\\fan_art.ini'
 soundmo_path = f'{cwd}\\soundmo.ini'
+fan_soundmo_path = f'{cwd}\\fan_soundmo.ini'
 
 # Инициализировать выбор загрузочного экрана.
 load_lst = [f.path for f in os.scandir(f'{cwd}\\LoadScreen') if f.is_dir()]
@@ -186,6 +187,8 @@ def remove():
         os.remove(fan_art_path)
     if os.path.exists(soundmo_path):
         os.remove(soundmo_path)
+    if os.path.exists(fan_soundmo_path):
+        os.remove(fan_soundmo_path)
     OriginalFiles = zipfile.ZipFile(f'{cwd}\\Vision_ini.zip')
     OriginalFiles.extract('INI/BattleClient.ini', f'{cwd}')
     OriginalFiles.extract('INI/MentalOmegaMaps.ini', f'{cwd}')
@@ -203,6 +206,7 @@ if "__main__" == __name__:
     Vision_zip.extract('artmo.ini', f'{cwd}')
     Vision_zip.extract('fan_art.ini', f'{cwd}')
     Vision_zip.extract('soundmo.ini', f'{cwd}')
+    Vision_zip.extract('fan_soundmo.ini', f'{cwd}')
     Vision_zip.close()
 
     # Начало инициализации и аудиомониторинга.

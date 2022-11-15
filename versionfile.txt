@@ -32,12 +32,12 @@ VSVersionInfo(
         u'040904B0',
         [StringStruct(u'CompanyName', u'YoWassup Inc'),
         StringStruct(u'FileDescription', u'MO Vision'),
-        StringStruct(u'FileVersion', u'2.0.1.0'),
+        StringStruct(u'FileVersion', u'2.0.1.1'),
         StringStruct(u'InternalName', u'MO Vision'),
         StringStruct(u'LegalCopyright', u'© YoWassup Inc. All rights reserved.'),
         StringStruct(u'OriginalFilename', u'MO Vision.exe'),
         StringStruct(u'ProductName', u'MO Vision'),
-        StringStruct(u'ProductVersion', u'2.0.1.0')])
+        StringStruct(u'ProductVersion', u'2.0.1.1')])
       ]), 
     VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
   ]

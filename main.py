@@ -27,10 +27,6 @@ import random
 import zipfile
 import psutil
 
-os.environ['PYTHON_VLC_MODULE_PATH'] = "./vlc-3.0.16"
-# Устанока пути к библиотеке VLC перед "import vlc".
-import vlc
-
 
 def resource_path(relative_path):
     try:
@@ -40,8 +36,13 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-# Инициализировать пути
+# Инициализировать путь
 cwd = resource_path(Path.cwd())
+
+os.environ['PYTHON_VLC_MODULE_PATH'] = f'{cwd}\\vlc-3.0.16'
+# Устанока пути к библиотеке VLC перед "import vlc".
+import vlc
+
 BattleClient_path = f'{cwd}\\INI\\BattleClient.ini'
 MentalOmegaMaps_path = f'{cwd}\\INI\\MentalOmegaMaps.ini'
 artmo_path = f'{cwd}\\artmo.ini'
@@ -53,14 +54,14 @@ load_lst = [f.path for f in os.scandir(f'{cwd}\\LoadScreen') if f.is_dir()]
 get_catalog = random.choice(load_lst)
 
 # Загрузить аудио к видео.
-file = QUrl.fromLocalFile(get_catalog + '/audio_muvi.wav')
+file = QUrl.fromLocalFile(get_catalog + '\\audio_muvi.wav')
 content = QtMultimedia.QMediaContent(file)
 wav_player = QtMultimedia.QMediaPlayer()
 wav_player.setMedia(content)
 wav_player.setVolume(100)
 
-# Загрузить аудиосигнал готовности игры.
-file1 = QUrl.fromLocalFile('gamecreated.wav')
+# Загрузить аудио к выбору в меню.
+file1 = QUrl.fromLocalFile(f'{cwd}\\gamecreated.wav')
 content1 = QtMultimedia.QMediaContent(file1)
 wav_player_fin = QtMultimedia.QMediaPlayer()
 wav_player_fin.setMedia(content1)
@@ -69,7 +70,7 @@ wav_player_fin.setVolume(100)
 
 def is_open(filename):
     try:
-        # Получить заголовок процесса.
+        # Получить процесс.
         vHandle = win32file.CreateFile(filename, GENERIC_READ, 0, None, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, None)
         if int(vHandle) == INVALID_HANDLE_VALUE:
             return True
@@ -154,19 +155,20 @@ def show_err():
     root = tkinter.Tk()
     root.withdraw()
     tkinter.messagebox.showerror('Сообщение',
-                                 'Ошибка при открытии "MO Client", попробуйте открыть его с правами Администратора. ' +
+                                 'Ошибка при открытии "MO Vision", попробуйте открыть его с правами Администратора. ' +
                                  'Но, если эта ошибка появилась еще раз, это может быть связано с тем, что файл ' +
-                                 'клиента занят,или отсутствует по пути установки, а так же это может быть ошибкой ' +
-                                 'выполнения программы. Попробуйте открыть "MO Client" вручную.')
+                                 'клиента занят,или отсутствует файл "clientdx.exe" в папке Resources, а так же это' +
+                                 'может быть ошибкой выполнения программы или попыткой запустить клиент "MO Vision" ' +
+                                 'с флешки или USB-HDD/SSD.')
 
 
 def show_info():
     root = tkinter.Tk()
     root.withdraw()
-    show_flag = tkinter.messagebox.askyesno('Вы действительно хотите запустить МО?',
-                                            'Обнаружено, что клиент МО запущен, рекомендуется завершить активный или ' +
-                                            'фоновый процесс программы клиента перед очередным открытием. ' +
-                                            'Вы действительно хотите принудительно открыть клиент МО?')
+    show_flag = tkinter.messagebox.askyesno('Вы действительно хотите запустить "MO Vision"?',
+                                            'Обнаружено, что клиент Mental Omega запущен, рекомендуется завершить ' +
+                                            'активный или фоновый процесс программы клиента перед очередным ' +
+                                            'открытием. Вы хотите принудительно открыть клиент "MO Vision"?')
     if show_flag == 0:
         exit(0)
 
@@ -224,7 +226,7 @@ if "__main__" == __name__:
         os.unlink(f'{cwd}\\Resources\\chaoticimpulse.wma')
     except:
         pass
-    shutil.copy2(get_catalog + '/chaoticimpulse.wma', f'{cwd}\\Resources\\chaoticimpulse.wma')
+    shutil.copy2(get_catalog + '\\chaoticimpulse.wma', f'{cwd}\\Resources\\chaoticimpulse.wma')
 
     time.sleep(0.1)
 
@@ -253,7 +255,7 @@ if "__main__" == __name__:
         if hwnd:
             if j == 1:
                 time.sleep(0.01)  # Предотвратить несвоевременное сворачивание окна.
-                player.play(get_catalog + '/muvi.mp4')
+                player.play(get_catalog + '\\muvi.mp4')
             flag = win32gui.ShowWindow(hwnd, win32con.SW_SHOWMINIMIZED)
             if flag:
                 break
@@ -319,7 +321,7 @@ if "__main__" == __name__:
         cnt = cnt + 1
 
     time.sleep(1)
-    win32gui.ShowWindow(hwnd, win32con.SW_NORMAL)
+    win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
 
     # Ожидание конца.
     try:

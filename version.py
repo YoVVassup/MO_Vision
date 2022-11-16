@@ -2,7 +2,7 @@ import pyinstaller_versionfile
 
 pyinstaller_versionfile.create_versionfile(
     output_file="versionfile.txt",
-    version="2.0.2",
+    version="2.0.2.1",
     company_name="YoWassup Inc",
     file_description="MO Vision",
     internal_name="MO Vision",

@@ -26,6 +26,7 @@ from PyQt5.QtCore import QUrl
 import random
 import zipfile
 import psutil
+import configparser
 
 
 def resource_path(relative_path):
@@ -49,10 +50,56 @@ artmo_path = f'{cwd}\\artmo.ini'
 fan_art_path = f'{cwd}\\fan_art.ini'
 soundmo_path = f'{cwd}\\soundmo.ini'
 fan_soundmo_path = f'{cwd}\\fan_soundmo.ini'
+gamemd_path = f'{cwd}\\gamemd.exe'
+Syringe_path = f'{cwd}\\Syringe.exe'
+ra2mo_ini_path = f'{cwd}\\RA2MO.ini'
 
 # Инициализировать выбор загрузочного экрана.
 load_lst = [f.path for f in os.scandir(f'{cwd}\\LoadScreen') if f.is_dir()]
 get_catalog = random.choice(load_lst)
+
+
+def show_err_compat_not_applicable():
+    root = tkinter.Tk()
+    root.withdraw()
+    tkinter.messagebox.showerror('Сообщение',
+                                 'Режим совместимости не может быть установлен для gamemd.exe и Syringe.exe,' +
+                                 ' по неизвестной причине.')
+
+
+def show_err_compat_failure():
+    root = tkinter.Tk()
+    root.withdraw()
+    tkinter.messagebox.showerror('Сообщение',
+                                 'Файлы gamemd.exe и Syringe.exe, возможно, отсутствуют в директории игры.')
+
+
+# Выставление режима совместимости для gamemd.exe и Syringe.exe
+if os.path.exists(gamemd_path):
+    process_compat1 = subprocess.Popen('REG.EXE ADD' +
+                                       ' "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" ' +
+                                       '/v "{}" /t REG_SZ /d "WINXPSP3 RUNASADMIN" /f'.format(gamemd_path))
+    result_proc = process_compat1.wait()
+    print(result_proc)
+    if result_proc != 0:
+        show_err_compat_not_applicable()
+        exit(0)
+else:
+    show_err_compat_failure()
+    exit(0)
+
+if os.path.exists(Syringe_path):
+    process_compat2 = subprocess.Popen('REG.EXE ADD' +
+                                       ' "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" ' +
+                                       '/v "{}" /t REG_SZ /d "WINXPSP3 RUNASADMIN" /f'.format(Syringe_path))
+    result_proc = process_compat2.wait()
+    if result_proc != 0:
+        show_err_compat_not_applicable()
+        exit(0)
+
+else:
+    show_err_compat_failure()
+    exit(0)
 
 # Загрузить аудио к видео.
 file = QUrl.fromLocalFile(get_catalog + '\\audio_muvi.wav')
@@ -67,6 +114,14 @@ content1 = QtMultimedia.QMediaContent(file1)
 wav_player_fin = QtMultimedia.QMediaPlayer()
 wav_player_fin.setMedia(content1)
 wav_player_fin.setVolume(100)
+
+# Захват конфигурационного файла
+if os.path.exists(gamemd_path):
+    config = configparser.ConfigParser()
+    config.read(ra2mo_ini_path)  # читаем конфиг
+    window_conf = config.get('Video', 'BorderlessWindowedClient', fallback='True')
+else:
+    window_conf = 'True'
 
 
 def is_open(filename):
@@ -300,7 +355,7 @@ if "__main__" == __name__:
                 pass
 
         # Для воспроизведения видео.
-        if player.get_position() >= 0.95:
+        if player.get_position() == 1:
             wav_player.stop()
             time.sleep(1)
             win32gui.CloseWindow(player_hwnd)
@@ -325,10 +380,12 @@ if "__main__" == __name__:
         cnt = cnt + 1
 
     time.sleep(1)
+
     # Принудительный вызов окна меню на передний план.
-    win32gui.BringWindowToTop(hwnd)
-    win32gui.SetForegroundWindow(hwnd)
-    win32gui.ShowWindow(hwnd, win32con.SW_SHOWMAXIMIZED)
+    if window_conf == 'True':
+        win32gui.ShowWindow(hwnd, win32con.SW_SHOWMAXIMIZED)
+    else:
+        win32gui.ShowWindow(hwnd, win32con.SW_NORMAL)
 
     # Ожидание конца.
     try:

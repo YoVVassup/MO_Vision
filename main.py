@@ -107,7 +107,7 @@ wav_player = QtMultimedia.QMediaPlayer()
 wav_player.setMedia(content)
 wav_player.setVolume(100)
 
-# Загрузить аудио к выбору в меню.
+# Загрузить аудио готовности игры.
 file1 = QUrl.fromLocalFile(f'{cwd}\\gamecreated.wav')
 content1 = QtMultimedia.QMediaContent(file1)
 wav_player_fin = QtMultimedia.QMediaPlayer()
@@ -252,7 +252,7 @@ def remove():
 
 if "__main__" == __name__:
 
-    remove()  # Очистка к первоначальному состоянию.
+    remove()  # Сброс всех предыдущих параметров.
 
     Vision_zip = zipfile.ZipFile(f'{cwd}\\Vision_ini.zip')
     Vision_zip.extract('BattleClient.ini', f'{cwd}\\INI\\')
@@ -271,7 +271,7 @@ if "__main__" == __name__:
     player.set_ratio()
     player.set_fullscreen()
 
-    # Предотвратить запуск "MO Client" в фоновом режиме.
+    # Завершить запуск "MO Client", при его предыдущем некоректоном закрытии.
     try:
         os.system('taskkill /f /im %s' % 'clientdx.exe')
     except (Exception,):
@@ -380,7 +380,7 @@ if "__main__" == __name__:
 
     time.sleep(1)
 
-    # Принудительный вызов окна меню на передний план.
+    # Обработка окна меню.
     if window_conf == 'True':
         win32gui.ShowWindow(hwnd, win32con.SW_SHOWMAXIMIZED)
     else:

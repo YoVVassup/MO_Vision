@@ -9,7 +9,6 @@
 # =====================
 
 import os
-import sys
 from pathlib import Path
 import win32gui
 import win32con
@@ -31,8 +30,8 @@ import configparser
 
 def resource_path(relative_path):
     try:
-        base_path = sys._MEIPASS
-    except Exception:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    except (Exception,):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
@@ -77,7 +76,7 @@ def show_err_compat_failure():
 # Выставление режима совместимости для gamemd.exe и Syringe.exe
 if os.path.exists(gamemd_path):
     process_compat1 = subprocess.Popen('REG.EXE ADD' +
-                                       ' "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" ' +
+                                       r' "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" ' +
                                        '/v "{}" /t REG_SZ /d "WINXPSP3 RUNASADMIN" /f'.format(gamemd_path))
     result_proc = process_compat1.wait()
     print(result_proc)
@@ -90,7 +89,7 @@ else:
 
 if os.path.exists(Syringe_path):
     process_compat2 = subprocess.Popen('REG.EXE ADD' +
-                                       ' "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" ' +
+                                       r' "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" ' +
                                        '/v "{}" /t REG_SZ /d "WINXPSP3 RUNASADMIN" /f'.format(Syringe_path))
     result_proc = process_compat2.wait()
     if result_proc != 0:
@@ -133,7 +132,7 @@ def is_open(filename):
         else:
             return False
 
-    except Exception:
+    except (Exception,):
         remove()
         return True
 
@@ -194,7 +193,7 @@ class Player:
         return self.media.set_fullscreen(1)
 
     def video_set_logo_string(self, str_param):
-        return self.media.video_set_logo_string(str_param)
+        return self.media.video_set_logo_string(0, str_param)
 
     def get_hwnd(self):
         return self.media.get_hwnd()
@@ -275,7 +274,7 @@ if "__main__" == __name__:
     # Предотвратить запуск "MO Client" в фоновом режиме.
     try:
         os.system('taskkill /f /im %s' % 'clientdx.exe')
-    except:
+    except (Exception,):
         remove()
         show_info()
         pass
@@ -283,7 +282,7 @@ if "__main__" == __name__:
     # Смена стиля.
     try:
         os.unlink(f'{cwd}\\Resources\\chaoticimpulse.wma')
-    except:
+    except (Exception,):
         pass
     shutil.copy2(get_catalog + '\\chaoticimpulse.wma', f'{cwd}\\Resources\\chaoticimpulse.wma')
 
@@ -293,7 +292,7 @@ if "__main__" == __name__:
     try:
         file = subprocess.Popen(f'{cwd}\\Resources\\clientdx.exe')
         pass
-    except Exception as e:
+    except (Exception,):
         remove()
         show_err()
         file.kill()
@@ -351,7 +350,7 @@ if "__main__" == __name__:
                 win32gui.BringWindowToTop(player_hwnd)
                 win32gui.SetForegroundWindow(player_hwnd)
                 j = 0
-            except Exception as e:
+            except (Exception,):
                 pass
 
         # Для воспроизведения видео.
@@ -390,7 +389,7 @@ if "__main__" == __name__:
     # Ожидание конца.
     try:
         win32gui.DestroyWindow(player_hwnd)
-    except:
+    except (Exception,):
         while "clientdx.exe" in (p.name() for p in psutil.process_iter()):
             time.sleep(1)
         remove()

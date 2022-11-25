@@ -79,7 +79,6 @@ if os.path.exists(gamemd_path):
                                        r' "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" ' +
                                        '/v "{}" /t REG_SZ /d "WINXPSP3 RUNASADMIN" /f'.format(gamemd_path))
     result_proc = process_compat1.wait()
-    print(result_proc)
     if result_proc != 0:
         show_err_compat_not_applicable()
         exit(0)
@@ -95,7 +94,6 @@ if os.path.exists(Syringe_path):
     if result_proc != 0:
         show_err_compat_not_applicable()
         exit(0)
-
 else:
     show_err_compat_failure()
     exit(0)
@@ -193,7 +191,7 @@ class Player:
         return self.media.set_fullscreen(1)
 
     def video_set_logo_string(self, str_param):
-        return self.media.video_set_logo_string(0, str_param)
+        return self.media.video_set_logo_string(str_param)
 
     def get_hwnd(self):
         return self.media.get_hwnd()

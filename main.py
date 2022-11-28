@@ -1,10 +1,11 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # =====================
 # Автор проекта "MO_Vision": YoWassup
-# github_project：MO_Vision
-# url：https://github.com/YoVVassup/MO_Vision
-# Автор проекта "MO_loading"：Rivendell2898
-# url：https://github.com/Rivendell2898/MO_loading [использовался для добавления возможности загрузки видеоэкранов]
+# github_project:MO_Vision
+# url:https://github.com/YoVVassup/MO_Vision
+# Автор проекта "MO_loading":Rivendell2898
+# url:https://github.com/Rivendell2898/MO_loading [использовался для добавления возможности загрузки видеоэкранов]
 # Этот код не предназначен для коммерческого использования.
 # =====================
 
@@ -40,8 +41,11 @@ def resource_path(relative_path):
 cwd = resource_path(Path.cwd())
 
 os.environ['PYTHON_VLC_MODULE_PATH'] = f'{cwd}\\vlc-3.0.16'
-# Устанока пути к библиотеке VLC перед "import vlc".
-import vlc
+try:
+    # Устанока пути к библиотеке VLC перед "import vlc".
+    import vlc
+except (Exception,):
+    raise
 
 BattleClient_path = f'{cwd}\\INI\\BattleClient.ini'
 MentalOmegaMaps_path = f'{cwd}\\INI\\MentalOmegaMaps.ini'
@@ -53,9 +57,17 @@ gamemd_path = f'{cwd}\\gamemd.exe'
 Syringe_path = f'{cwd}\\Syringe.exe'
 ra2mo_ini_path = f'{cwd}\\RA2MO.ini'
 
+# Заглушки
+file = ''
+wav_player = ''
+wav_player_fin = ''
+
 # Инициализировать выбор загрузочного экрана.
 load_lst = [f.path for f in os.scandir(f'{cwd}\\LoadScreen') if f.is_dir()]
-get_catalog = random.choice(load_lst)
+if load_lst:
+    get_catalog = random.choice(load_lst)
+else:
+    get_catalog = ''
 
 
 def show_err_compat_not_applicable():
@@ -74,43 +86,37 @@ def show_err_compat_failure():
 
 
 # Выставление режима совместимости для gamemd.exe и Syringe.exe
-if os.path.exists(gamemd_path):
-    process_compat1 = subprocess.Popen('REG.EXE ADD' +
-                                       r' "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" ' +
-                                       '/v "{}" /t REG_SZ /d "WINXPSP3 RUNASADMIN" /f'.format(gamemd_path))
-    result_proc = process_compat1.wait()
-    if result_proc != 0:
-        show_err_compat_not_applicable()
+def reg_add(path):
+    if os.path.exists(path):
+        process_compat = subprocess.Popen(r'REG.EXE ADD "HKLM\SOFTWARE\Microsoft\Windows ' +
+                                          r'NT\CurrentVersion\AppCompatFlags\Layers" ' +
+                                          '/v "{}" /t REG_SZ /d "WINXPSP3 RUNASADMIN" /f'.format(path))
+        result_proc = process_compat.wait()
+        if result_proc != 0:
+            show_err_compat_not_applicable()
+            exit(0)
+    else:
+        show_err_compat_failure()
         exit(0)
-else:
-    show_err_compat_failure()
-    exit(0)
 
-if os.path.exists(Syringe_path):
-    process_compat2 = subprocess.Popen('REG.EXE ADD' +
-                                       r' "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers" ' +
-                                       '/v "{}" /t REG_SZ /d "WINXPSP3 RUNASADMIN" /f'.format(Syringe_path))
-    result_proc = process_compat2.wait()
-    if result_proc != 0:
-        show_err_compat_not_applicable()
-        exit(0)
-else:
-    show_err_compat_failure()
-    exit(0)
 
-# Загрузить аудио к видео.
-file = QUrl.fromLocalFile(get_catalog + '\\audio_muvi.wav')
-content = QtMultimedia.QMediaContent(file)
-wav_player = QtMultimedia.QMediaPlayer()
-wav_player.setMedia(content)
-wav_player.setVolume(100)
+reg_add(gamemd_path)
+reg_add(Syringe_path)
 
-# Загрузить аудио готовности игры.
-file1 = QUrl.fromLocalFile(f'{cwd}\\gamecreated.wav')
-content1 = QtMultimedia.QMediaContent(file1)
-wav_player_fin = QtMultimedia.QMediaPlayer()
-wav_player_fin.setMedia(content1)
-wav_player_fin.setVolume(100)
+if get_catalog != '':
+    # Загрузить аудио к видео.
+    file1 = QUrl.fromLocalFile(get_catalog + '\\audio_muvi.wav')
+    content = QtMultimedia.QMediaContent(file1)
+    wav_player = QtMultimedia.QMediaPlayer()
+    wav_player.setMedia(content)
+    wav_player.setVolume(100)
+
+    # Загрузить аудио готовности игры.
+    file2 = QUrl.fromLocalFile(f'{cwd}\\gamecreated.wav')
+    content1 = QtMultimedia.QMediaContent(file2)
+    wav_player_fin = QtMultimedia.QMediaPlayer()
+    wav_player_fin.setMedia(content1)
+    wav_player_fin.setVolume(100)
 
 # Захват конфигурационного файла
 if os.path.exists(gamemd_path):
@@ -124,8 +130,8 @@ else:
 def is_open(filename):
     try:
         # Получить процесс.
-        vHandle = win32file.CreateFile(filename, GENERIC_READ, 0, None, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, None)
-        if int(vHandle) == INVALID_HANDLE_VALUE:
+        vhandle = win32file.CreateFile(filename, GENERIC_READ, 0, None, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, None)
+        if int(vhandle) == INVALID_HANDLE_VALUE:
             return True
         else:
             return False
@@ -191,7 +197,7 @@ class Player:
         return self.media.set_fullscreen(1)
 
     def video_set_logo_string(self, str_param):
-        return self.media.video_set_logo_string(str_param)
+        return self.media.video_set_logo_string(str_param, 0)
 
     def get_hwnd(self):
         return self.media.get_hwnd()
@@ -241,52 +247,25 @@ def remove():
         os.remove(soundmo_path)
     if os.path.exists(fan_soundmo_path):
         os.remove(fan_soundmo_path)
-    OriginalFiles = zipfile.ZipFile(f'{cwd}\\Vision_ini.zip')
-    OriginalFiles.extract('INI/BattleClient.ini', f'{cwd}')
-    OriginalFiles.extract('INI/MentalOmegaMaps.ini', f'{cwd}')
-    OriginalFiles.extract('chaoticimpulse.wma', f'{cwd}\\Resources')
-    OriginalFiles.close()
+    original_files = zipfile.ZipFile(f'{cwd}\\Vision_ini.zip')
+    original_files.extract('INI/BattleClient.ini', f'{cwd}')
+    original_files.extract('INI/MentalOmegaMaps.ini', f'{cwd}')
+    original_files.extract('chaoticimpulse.wma', f'{cwd}\\Resources')
+    original_files.close()
 
 
-if "__main__" == __name__:
-
-    remove()  # Сброс всех предыдущих параметров.
-
-    Vision_zip = zipfile.ZipFile(f'{cwd}\\Vision_ini.zip')
-    Vision_zip.extract('BattleClient.ini', f'{cwd}\\INI\\')
-    Vision_zip.extract('MentalOmegaMaps.ini', f'{cwd}\\INI\\')
-    Vision_zip.extract('artmo.ini', f'{cwd}')
-    Vision_zip.extract('fan_art.ini', f'{cwd}')
-    Vision_zip.extract('soundmo.ini', f'{cwd}')
-    Vision_zip.extract('fan_soundmo.ini', f'{cwd}')
-    Vision_zip.close()
-
-    # Начало инициализации и аудиомониторинга.
-    start_time = time.time()
-
-    # Инициализация.
-    player = Player()
-    player.set_ratio()
-    player.set_fullscreen()
-
-    # Завершить запуск "MO Client", при его предыдущем некоректоном закрытии.
+def kill_client():
     try:
-        os.system('taskkill /f /im %s' % 'clientdx.exe')
+        if "clientdx.exe" in (p.name() for p in psutil.process_iter()):
+            os.system('taskkill /f /im %s' % 'clientdx.exe')
     except (Exception,):
         remove()
         show_info()
         pass
 
-    # Смена стиля.
-    try:
-        os.unlink(f'{cwd}\\Resources\\chaoticimpulse.wma')
-    except (Exception,):
-        pass
-    shutil.copy2(get_catalog + '\\chaoticimpulse.wma', f'{cwd}\\Resources\\chaoticimpulse.wma')
 
-    time.sleep(0.1)
-
-    # Открыть МО.
+def open_client():
+    global file
     try:
         file = subprocess.Popen(f'{cwd}\\Resources\\clientdx.exe')
         pass
@@ -295,100 +274,150 @@ if "__main__" == __name__:
         show_err()
         file.kill()
 
-    # Определить окно.
-    FrameClass = 'WindowsForms10.Window.8.app.0.1ca0192_r6_ad1'
-    FrameTitle = 'MO Client'
-    hwnd = win32gui.FindWindow(None, FrameTitle)
 
-    playerClass = 'IME'
-    playerTile = 'Default IME'
-    player_hwnd = win32gui.FindWindow(None, playerTile)
+if "__main__" == __name__:
 
-    i = 0
-    j = 1
-    # Свернуть окно и воспроизвести видео.
-    while i < 1000:
-        if hwnd:
-            if j == 1:
-                time.sleep(0.01)  # Предотвратить несвоевременное сворачивание окна.
-                player.play(get_catalog + '\\muvi.mp4')
-            flag = win32gui.ShowWindow(hwnd, win32con.SW_SHOWMINIMIZED)
-            if flag:
-                break
-            time.sleep(0.01)
-            i = i + 1
-            j = 0
+    remove()  # Сброс всех предыдущих параметров.
 
-        else:
-            hwnd = win32gui.FindWindow(FrameClass, FrameTitle)
-            time.sleep(0.01)
-            i = i + 1
+    vision_zip = zipfile.ZipFile(f'{cwd}\\Vision_ini.zip')
+    vision_zip.extract('BattleClient.ini', f'{cwd}\\INI\\')
+    vision_zip.extract('MentalOmegaMaps.ini', f'{cwd}\\INI\\')
+    vision_zip.extract('artmo.ini', f'{cwd}')
+    vision_zip.extract('fan_art.ini', f'{cwd}')
+    vision_zip.extract('soundmo.ini', f'{cwd}')
+    vision_zip.extract('fan_soundmo.ini', f'{cwd}')
+    vision_zip.close()
 
-    # Если время истекло, сообщить об ошибке.
-    if i >= 1000:
-        show_err()
-        exit(0)
+    if get_catalog != '':
 
-    j = 1
-    flag = 0
-    cnt = 0
-    wav_player.play()
+        # Начало инициализации и аудиомониторинга.
+        start_time = time.time()
 
-    # Предотвратить завершение процесса проигрывания.
-    while True:
-        time.sleep(0.1)  # Предотвращение слишком быстрого сбоя цикла while.
-        end_time = time.time()
+        # Инициализация.
+        player = Player()
+        player.set_ratio()
+        player.set_fullscreen()
 
-        # Если окно плеера не найдено.
-        if player_hwnd == 0:
-            player_hwnd = win32gui.FindWindow(None, playerTile)
-        # Если окно найдено.
-        else:
-            try:
-                win32gui.BringWindowToTop(player_hwnd)
-                win32gui.SetForegroundWindow(player_hwnd)
+        # Завершить запуск "MO Client", при его предыдущем некоректоном закрытии.
+        kill_client()
+
+        # Смена стиля.
+        try:
+            os.unlink(f'{cwd}\\Resources\\chaoticimpulse.wma')
+        except (Exception,):
+            pass
+        shutil.copy2(get_catalog + '\\chaoticimpulse.wma', f'{cwd}\\Resources\\chaoticimpulse.wma')
+
+        time.sleep(0.1)
+
+        # Открыть МО.
+        open_client()
+
+        # Определить окно.
+        FrameClass = 'WindowsForms10.Window.8.app.0.1ca0192_r6_ad1'
+        FrameTitle = 'MO Client'
+        hwnd = win32gui.FindWindow(None, FrameTitle)
+
+        playerClass = 'IME'
+        playerTile = 'Default IME'
+        player_hwnd = win32gui.FindWindow(None, playerTile)
+
+        i = 0
+        j = 1
+        # Свернуть окно и воспроизвести видео.
+        while i < 1000:
+            if hwnd:
+                if j == 1:
+                    time.sleep(0.01)  # Предотвратить несвоевременное сворачивание окна.
+                    player.play(get_catalog + '\\muvi.mp4')
+                flag = win32gui.ShowWindow(hwnd, win32con.SW_SHOWMINIMIZED)
+                if flag:
+                    break
+                time.sleep(0.01)
+                i = i + 1
                 j = 0
-            except (Exception,):
-                pass
 
-        # Для воспроизведения видео.
-        if player.get_position() == 1:
-            wav_player.stop()
-            time.sleep(1)
-            win32gui.CloseWindow(player_hwnd)
-            break
+            else:
+                hwnd = win32gui.FindWindow(FrameClass, FrameTitle)
+                time.sleep(0.01)
+                i = i + 1
 
-        if (end_time - start_time) >= 10:
-            wav_player.stop()
-            time.sleep(1)
-            win32gui.CloseWindow(player_hwnd)
-            break
+        # Если время истекло, сообщить об ошибке.
+        if i >= 1000:
+            show_err()
+            exit(0)
 
-        if cnt % 20 == 0 and cnt > 1:
-            if not is_open(f'{cwd}\\Resources\\OptionsWindow.ini'):
+        j = 1
+        flag = 0
+        cnt = 0
+        wav_player.play()
+
+        # Предотвратить завершение процесса проигрывания.
+        while True:
+            time.sleep(0.1)  # Предотвращение слишком быстрого сбоя цикла while.
+            end_time = time.time()
+
+            # Если окно плеера не найдено.
+            if player_hwnd == 0:
+                player_hwnd = win32gui.FindWindow(None, playerTile)
+            # Если окно найдено.
+            else:
+                try:
+                    win32gui.BringWindowToTop(player_hwnd)
+                    win32gui.SetForegroundWindow(player_hwnd)
+                    j = 0
+                except (Exception,):
+                    pass
+
+            # Для воспроизведения видео.
+            if player.get_position() == 1:
                 wav_player.stop()
-                wav_player_fin.play()
-                player.set_time(13000)  # Видео должно воспроизводиться, когда окно закрыто, иначе оно зависнет.
-                time.sleep(1)
-                wav_player_fin.stop()
                 time.sleep(1)
                 win32gui.CloseWindow(player_hwnd)
                 break
-        cnt = cnt + 1
 
-    time.sleep(1)
+            if (end_time - start_time) >= 10:
+                wav_player.stop()
+                time.sleep(1)
+                win32gui.CloseWindow(player_hwnd)
+                break
 
-    # Обработка окна меню.
-    if window_conf == 'True':
-        win32gui.ShowWindow(hwnd, win32con.SW_SHOWMAXIMIZED)
+            if cnt % 20 == 0 and cnt > 1:
+                if not is_open(f'{cwd}\\Resources\\OptionsWindow.ini'):
+                    wav_player.stop()
+                    wav_player_fin.play()
+                    player.set_time(13000)  # Видео должно воспроизводиться, когда окно закрыто, иначе оно зависнет.
+                    time.sleep(1)
+                    wav_player_fin.stop()
+                    time.sleep(1)
+                    win32gui.CloseWindow(player_hwnd)
+                    break
+            cnt = cnt + 1
+
+        time.sleep(1)
+
+        # Обработка окна меню.
+        if window_conf == 'True':
+            win32gui.ShowWindow(hwnd, win32con.SW_SHOWMAXIMIZED)
+        else:
+            win32gui.ShowWindow(hwnd, win32con.SW_NORMAL)
+
+        # Ожидание конца.
+        try:
+            win32gui.DestroyWindow(player_hwnd)
+        except (Exception,):
+            while "clientdx.exe" in (p.name() for p in psutil.process_iter()):
+                time.sleep(1)
+            remove()
+            pass
     else:
-        win32gui.ShowWindow(hwnd, win32con.SW_NORMAL)
+        # Завершить запуск "MO Client", при его предыдущем некоректоном закрытии.
+        kill_client()
 
-    # Ожидание конца.
-    try:
-        win32gui.DestroyWindow(player_hwnd)
-    except (Exception,):
+        # Открыть МО.
+        open_client()
+
+        # Ожидание конца.
         while "clientdx.exe" in (p.name() for p in psutil.process_iter()):
             time.sleep(1)
         remove()
-        pass

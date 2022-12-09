@@ -10,6 +10,7 @@
 # =====================
 
 import os
+import platform
 from pathlib import Path
 import win32gui
 import win32con
@@ -37,12 +38,36 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+def show_err_not_architecture():
+    root = tkinter.Tk()
+    root.withdraw()
+    tkinter.messagebox.showerror('Сообщение',
+                                 'Не удалось определить разрядность системы,\nприложение будет закрыто.')
+
+
 # Инициализировать путь
 cwd = resource_path(Path.cwd())
 
-os.environ['PYTHON_VLC_MODULE_PATH'] = f'{cwd}\\vlc-3.0.16'
+# Определить версию и разрядность системы
+win_architecture = platform.architecture()[0]
+win_realise = platform.release()
+# Необходимо проверить и дополнить для всех вариантов систем
+dict_platform = {'XP': '',
+                 '7': 'WindowsForms10.Window.8.app.0.1ca0192_r12_ad1',
+                 '8': '',
+                 '8.1': '',
+                 '10': 'WindowsForms10.Window.8.app.0.1ca0192_r6_ad1',
+                 '11': ''}
+
+# Устанока пути к библиотеке VLC перед "import vlc".
+if win_architecture == '32bit':
+    os.environ['PYTHON_VLC_MODULE_PATH'] = f'{cwd}\\vlc-3.0.18-x32'
+elif win_architecture == '64bit':
+    os.environ['PYTHON_VLC_MODULE_PATH'] = f'{cwd}\\vlc-3.0.18-x64'
+else:
+    show_err_not_architecture()
+    exit(0)
 try:
-    # Устанока пути к библиотеке VLC перед "import vlc".
     import vlc
 except (Exception,):
     raise
@@ -56,18 +81,20 @@ fan_soundmo_path = f'{cwd}\\fan_soundmo.ini'
 gamemd_path = f'{cwd}\\gamemd.exe'
 Syringe_path = f'{cwd}\\Syringe.exe'
 ra2mo_ini_path = f'{cwd}\\RA2MO.ini'
+options_window_ini_path = f'{cwd}\\Resources\\OptionsWindow.ini'
 
 # Заглушки
 file = ''
 wav_player = ''
 wav_player_fin = ''
+flag_load = False
+get_catalog = ''
 
 # Инициализировать выбор загрузочного экрана.
 load_lst = [f.path for f in os.scandir(f'{cwd}\\LoadScreen') if f.is_dir()]
 if load_lst:
     get_catalog = random.choice(load_lst)
-else:
-    get_catalog = ''
+    flag_load = True
 
 
 def show_err_compat_not_applicable():
@@ -103,7 +130,7 @@ def reg_add(path):
 reg_add(gamemd_path)
 reg_add(Syringe_path)
 
-if get_catalog != '':
+if flag_load:
     # Загрузить аудио к видео.
     file1 = QUrl.fromLocalFile(get_catalog + '\\audio_muvi.wav')
     content = QtMultimedia.QMediaContent(file1)
@@ -288,7 +315,7 @@ if "__main__" == __name__:
     vision_zip.extract('fan_soundmo.ini', f'{cwd}')
     vision_zip.close()
 
-    if get_catalog != '':
+    if flag_load:
 
         # Начало инициализации и аудиомониторинга.
         start_time = time.time()
@@ -314,13 +341,12 @@ if "__main__" == __name__:
         open_client()
 
         # Определить окно.
-        FrameClass = 'WindowsForms10.Window.8.app.0.1ca0192_r6_ad1'
+        FrameClass = dict_platform[win_realise]
         FrameTitle = 'MO Client'
         hwnd = win32gui.FindWindow(None, FrameTitle)
 
-        playerClass = 'IME'
-        playerTile = 'Default IME'
-        player_hwnd = win32gui.FindWindow(None, playerTile)
+        playerTitle = 'Default IME'
+        player_hwnd = win32gui.FindWindow(None, playerTitle)
 
         i = 0
         j = 1
@@ -345,6 +371,8 @@ if "__main__" == __name__:
         # Если время истекло, сообщить об ошибке.
         if i >= 1000:
             show_err()
+            if "clientdx.exe" in (p.name() for p in psutil.process_iter()):
+                os.system('taskkill /f /im %s' % 'clientdx.exe')
             exit(0)
 
         j = 1
@@ -359,7 +387,7 @@ if "__main__" == __name__:
 
             # Если окно плеера не найдено.
             if player_hwnd == 0:
-                player_hwnd = win32gui.FindWindow(None, playerTile)
+                player_hwnd = win32gui.FindWindow(None, playerTitle)
             # Если окно найдено.
             else:
                 try:

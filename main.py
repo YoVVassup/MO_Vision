@@ -34,7 +34,7 @@ def resource_path(relative_path):
     try:
         base_path = os.path.dirname(os.path.abspath(__file__))
     except (Exception,):
-        base_path = os.path.abspath(".")
+        base_path = os.path.abspath('.')
     return os.path.join(base_path, relative_path)
 
 
@@ -52,12 +52,17 @@ cwd = resource_path(Path.cwd())
 win_architecture = platform.architecture()[0]
 win_realise = platform.release()
 # Необходимо проверить и дополнить для всех вариантов систем
-dict_platform = {'XP': '',
-                 '7': 'WindowsForms10.Window.8.app.0.1ca0192_r12_ad1',
-                 '8': '',
-                 '8.1': '',
-                 '10': 'WindowsForms10.Window.8.app.0.1ca0192_r6_ad1',
-                 '11': ''}
+dict_platform_x32 = {'XP': '',
+                     '2003': '',
+                     '7': '',
+                     '8.1': '',
+                     '10': 'WindowsForms10.Window.8.app.0.1ca0192_r7_ad1'}
+
+dict_platform_x64 = {'XP': '',
+                     '7': 'WindowsForms10.Window.8.app.0.1ca0192_r12_ad1',
+                     '8.1': 'WindowsForms10.Window.8.app.0.1ca0192_r11_ad1',
+                     '10': 'WindowsForms10.Window.8.app.0.1ca0192_r6_ad1',
+                     '11': 'WindowsForms10.Window.8.app.0.34f5582_r6_ad1'}
 
 # Устанока пути к библиотеке VLC перед "import vlc".
 if win_architecture == '32bit':
@@ -283,7 +288,7 @@ def remove():
 
 def kill_client():
     try:
-        if "clientdx.exe" in (p.name() for p in psutil.process_iter()):
+        if 'clientdx.exe' in (p.name() for p in psutil.process_iter()):
             os.system('taskkill /f /im %s' % 'clientdx.exe')
     except (Exception,):
         remove()
@@ -341,10 +346,16 @@ if "__main__" == __name__:
         open_client()
 
         # Определить окно.
-        FrameClass = dict_platform[win_realise]
+        if win_architecture == '32bit':
+            FrameClass = dict_platform_x32[win_realise]
+        elif win_architecture == '64bit':
+            FrameClass = dict_platform_x64[win_realise]
+        else:
+            FrameClass = ''
         FrameTitle = 'MO Client'
         hwnd = win32gui.FindWindow(None, FrameTitle)
 
+        playerClass = 'IME'
         playerTitle = 'Default IME'
         player_hwnd = win32gui.FindWindow(None, playerTitle)
 
@@ -371,7 +382,7 @@ if "__main__" == __name__:
         # Если время истекло, сообщить об ошибке.
         if i >= 1000:
             show_err()
-            if "clientdx.exe" in (p.name() for p in psutil.process_iter()):
+            if 'clientdx.exe' in (p.name() for p in psutil.process_iter()):
                 os.system('taskkill /f /im %s' % 'clientdx.exe')
             exit(0)
 
@@ -382,7 +393,7 @@ if "__main__" == __name__:
 
         # Предотвратить завершение процесса проигрывания.
         while True:
-            time.sleep(0.1)  # Предотвращение слишком быстрого сбоя цикла while.
+            time.sleep(0.15)  # Предотвращение слишком быстрого сбоя цикла while.
             end_time = time.time()
 
             # Если окно плеера не найдено.
@@ -434,7 +445,7 @@ if "__main__" == __name__:
         try:
             win32gui.DestroyWindow(player_hwnd)
         except (Exception,):
-            while "clientdx.exe" in (p.name() for p in psutil.process_iter()):
+            while 'clientdx.exe' in (p.name() for p in psutil.process_iter()):
                 time.sleep(1)
             remove()
             pass
@@ -446,6 +457,6 @@ if "__main__" == __name__:
         open_client()
 
         # Ожидание конца.
-        while "clientdx.exe" in (p.name() for p in psutil.process_iter()):
+        while 'clientdx.exe' in (p.name() for p in psutil.process_iter()):
             time.sleep(1)
         remove()

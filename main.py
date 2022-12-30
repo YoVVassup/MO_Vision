@@ -51,16 +51,11 @@ cwd = resource_path(Path.cwd())
 # Определить версию и разрядность системы
 win_architecture = platform.architecture()[0]
 win_realise = platform.release()
-# Необходимо проверить и дополнить для всех вариантов систем
-dict_platform_x32 = {'XP': '',
-                     '2003': '',
-                     '7': '',
-                     '8.1': '',
+# Все системы поддреживающие воспроизведение заставки
+dict_platform_x32 = {'8.1': 'WindowsForms10.Window.8.app.0.1a0e24_r11_ad1',
                      '10': 'WindowsForms10.Window.8.app.0.1ca0192_r7_ad1'}
 
-dict_platform_x64 = {'XP': '',
-                     '7': 'WindowsForms10.Window.8.app.0.1ca0192_r12_ad1',
-                     '8.1': 'WindowsForms10.Window.8.app.0.1ca0192_r11_ad1',
+dict_platform_x64 = {'8.1': 'WindowsForms10.Window.8.app.0.1ca0192_r11_ad1',
                      '10': 'WindowsForms10.Window.8.app.0.1ca0192_r6_ad1',
                      '11': 'WindowsForms10.Window.8.app.0.34f5582_r6_ad1'}
 
@@ -264,6 +259,16 @@ def show_info():
         exit(0)
 
 
+def show_err_not_os():
+    root = tkinter.Tk()
+    root.withdraw()
+    tkinter.messagebox.showerror('Сообщение',
+                                 'У вас установлена OS Windows ' + '{} '.format(win_realise) +
+                                 '{}'.format(win_architecture) + ', которая в данном случае не совместима с ' +
+                                 'выбранными параметрами запуска. Попробуйте удалить все вложеные папки из папки ' +
+                                 '"LoadScreen", чтобы запустить игру гарантировано, но без видеозаставки.')
+
+
 def remove():
     if not os.path.exists(f'{cwd}\\INI\\'):  # проверка на существование каталога INI
         os.mkdir(f'{cwd}\\INI\\')
@@ -346,12 +351,15 @@ if "__main__" == __name__:
         open_client()
 
         # Определить окно.
-        if win_architecture == '32bit':
+        if win_architecture == '32bit' and win_realise in ['8.1', '10']:
             FrameClass = dict_platform_x32[win_realise]
-        elif win_architecture == '64bit':
+        elif win_architecture == '64bit' and win_realise in ['8.1', '10', '11']:
             FrameClass = dict_platform_x64[win_realise]
         else:
             FrameClass = ''
+            if 'clientdx.exe' in (p.name() for p in psutil.process_iter()):
+                os.system('taskkill /f /im %s' % 'clientdx.exe')
+                show_err_not_os()
         FrameTitle = 'MO Client'
         hwnd = win32gui.FindWindow(None, FrameTitle)
 
@@ -362,7 +370,7 @@ if "__main__" == __name__:
         i = 0
         j = 1
         # Свернуть окно и воспроизвести видео.
-        while i < 1000:
+        while i < 1000 and FrameClass != '':
             if hwnd:
                 if j == 1:
                     time.sleep(0.01)  # Предотвратить несвоевременное сворачивание окна.
@@ -380,7 +388,7 @@ if "__main__" == __name__:
                 i = i + 1
 
         # Если время истекло, сообщить об ошибке.
-        if i >= 1000:
+        if i >= 1000 and FrameClass != '':
             show_err()
             if 'clientdx.exe' in (p.name() for p in psutil.process_iter()):
                 os.system('taskkill /f /im %s' % 'clientdx.exe')
@@ -389,10 +397,11 @@ if "__main__" == __name__:
         j = 1
         flag = 0
         cnt = 0
-        wav_player.play()
+        if FrameClass != '':
+            wav_player.play()
 
         # Предотвратить завершение процесса проигрывания.
-        while True:
+        while True and FrameClass != '':
             time.sleep(0.15)  # Предотвращение слишком быстрого сбоя цикла while.
             end_time = time.time()
 
